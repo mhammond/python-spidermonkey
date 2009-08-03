@@ -54,5 +54,5 @@ py2js_object(Context* cx, PyObject* pyobj)
 PyObject*
 js2py_object(Context* cx, jsval val)
 {
-    return make_object(ObjectType, cx, val);
+    return make_object(&ObjectType, cx, val);
 }

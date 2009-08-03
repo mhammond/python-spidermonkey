@@ -11,7 +11,7 @@
 PyObject*
 HashCObj_FromVoidPtr(void *cobj)
 {
-    HashCObj* self = PyObject_NEW(HashCObj, HashCObjType);
+    HashCObj* self = PyObject_NEW(HashCObj, &HashCObjType);
     if(self == NULL) return NULL;
     self->cobj = cobj;
     return (PyObject*) self;
@@ -28,13 +28,13 @@ HashCObj_cmp(PyObject* self, PyObject* other)
 {
     int ret = -1;
 
-    if(!PyObject_TypeCheck(self, HashCObjType))
+    if(!PyObject_TypeCheck(self, &HashCObjType))
     {
         PyErr_SetString(PyExc_ValueError, "Invalid comparison object.");
         return -1;
     }
 
-    if(!PyObject_TypeCheck(other, HashCObjType))
+    if(!PyObject_TypeCheck(other, &HashCObjType))
     {
         PyErr_SetString(PyExc_ValueError, "Invalid comparison object 2.");
         return -1;
@@ -62,7 +62,7 @@ HashCObj_hash(HashCObj* self)
     return _Py_HashPointer(self->cobj);
 }
 
-PyTypeObject _HashCObjType = {
+PyTypeObject HashCObjType = {
     PyObject_HEAD_INIT(NULL)
     0,                                          /*ob_size*/
     "spidermonkey._HashCObj",                   /*tp_name*/

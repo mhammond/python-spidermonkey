@@ -69,7 +69,7 @@ Runtime_new_context(Runtime* self, PyObject* args, PyObject* kwargs)
     tpl = Py_BuildValue("OOO", self, global, access);
     if(tpl == NULL) goto error;
 
-    cx = PyObject_CallObject((PyObject*) ContextType, tpl);
+    cx = PyObject_CallObject((PyObject *)&ContextType, tpl);
     goto success;
 
 error:
@@ -94,7 +94,7 @@ static PyMethodDef Runtime_methods[] = {
     {NULL}
 };
 
-PyTypeObject _RuntimeType = {
+PyTypeObject RuntimeType = {
     PyObject_HEAD_INIT(NULL)
     0,                                          /*ob_size*/
     "spidermonkey.Runtime",                     /*tp_name*/

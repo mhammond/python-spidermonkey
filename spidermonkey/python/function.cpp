@@ -17,7 +17,7 @@ Function_dealloc(Function* self)
         JS_RemoveRoot(self->obj.cx->cx, &(self->parent));
     }
 
-    ObjectType->tp_dealloc((PyObject*) self);
+    ObjectType.tp_dealloc((PyObject*) self);
 }
 
 PyObject*
@@ -88,7 +88,7 @@ static PyMethodDef Function_methods[] = {
     {NULL}
 };
 
-PyTypeObject _FunctionType = {
+PyTypeObject FunctionType = {
     PyObject_HEAD_INIT(NULL)
     0,                                          /*ob_size*/
     "spidermonkey.Function",                    /*tp_name*/

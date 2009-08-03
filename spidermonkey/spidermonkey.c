@@ -13,13 +13,6 @@
 #endif
 
 PyObject* SpidermonkeyModule = NULL;
-PyTypeObject* RuntimeType = NULL;
-PyTypeObject* ContextType = NULL;
-PyTypeObject* ObjectType = NULL;
-PyTypeObject* ArrayType = NULL;
-PyTypeObject* FunctionType = NULL;
-PyTypeObject* IteratorType = NULL;
-PyTypeObject* HashCObjType = NULL;
 PyObject* JSError = NULL;
 
 static PyMethodDef spidermonkey_methods[] = {
@@ -31,45 +24,38 @@ initspidermonkey(void)
 {
     PyObject* m;
     
-    if(PyType_Ready(&_RuntimeType) < 0) return;
-    if(PyType_Ready(&_ContextType) < 0) return;
-    if(PyType_Ready(&_ObjectType) < 0) return;
-    _ArrayType.tp_base = &_ObjectType;
-    if(PyType_Ready(&_ArrayType) < 0) return;
-    _FunctionType.tp_base = &_ObjectType;
-    if(PyType_Ready(&_FunctionType) < 0) return;
-    if(PyType_Ready(&_IteratorType) < 0) return;
-    if(PyType_Ready(&_HashCObjType) < 0) return;
+    if(PyType_Ready(&RuntimeType) < 0) return;
+    if(PyType_Ready(&ContextType) < 0) return;
+    if(PyType_Ready(&ObjectType) < 0) return;
+    ArrayType.tp_base = &ObjectType;
+    if(PyType_Ready(&ArrayType) < 0) return;
+    FunctionType.tp_base = &ObjectType;
+    if(PyType_Ready(&FunctionType) < 0) return;
+    if(PyType_Ready(&IteratorType) < 0) return;
+    if(PyType_Ready(&HashCObjType) < 0) return;
     
     m = Py_InitModule3("spidermonkey", spidermonkey_methods,
                             "The Python-Spidermonkey bridge.");
     if(m == NULL) return;
 
-    RuntimeType = &_RuntimeType;
-    Py_INCREF(RuntimeType);
-    PyModule_AddObject(m, "Runtime", (PyObject*) RuntimeType);
+    Py_INCREF(&RuntimeType);
+    PyModule_AddObject(m, "Runtime", (PyObject*)&RuntimeType);
 
-    ContextType = &_ContextType;
-    Py_INCREF(ContextType);
-    PyModule_AddObject(m, "Context", (PyObject*) ContextType);
+    Py_INCREF(&ContextType);
+    PyModule_AddObject(m, "Context", (PyObject*)&ContextType);
 
-    ObjectType = &_ObjectType;
-    Py_INCREF(ObjectType);
-    PyModule_AddObject(m, "Object", (PyObject*) ObjectType);
+    Py_INCREF(&ObjectType);
+    PyModule_AddObject(m, "Object", (PyObject*)&ObjectType);
 
-    ArrayType = &_ArrayType;
-    Py_INCREF(ArrayType);
-    PyModule_AddObject(m, "Array", (PyObject*) ArrayType);
+    Py_INCREF(&ArrayType);
+    PyModule_AddObject(m, "Array", (PyObject*)&ArrayType);
 
-    FunctionType = &_FunctionType;
-    Py_INCREF(FunctionType);
-    PyModule_AddObject(m, "Function", (PyObject*) FunctionType);
+    Py_INCREF(&FunctionType);
+    PyModule_AddObject(m, "Function", (PyObject*)&FunctionType);
 
-    IteratorType = &_IteratorType;
-    Py_INCREF(IteratorType);
+    //Py_INCREF(IteratorType);
 
-    HashCObjType = &_HashCObjType;
-    Py_INCREF(HashCObjType);
+    //Py_INCREF(HashCObjType);
 
     JSError = PyErr_NewException("spidermonkey.JSError", NULL, NULL);
     PyModule_AddObject(m, "JSError", JSError);

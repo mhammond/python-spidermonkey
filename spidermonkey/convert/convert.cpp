@@ -37,7 +37,7 @@ py2js(Context* cx, PyObject* obj)
     {
         return py2js_string(cx, obj);
     }
-    else if(PyObject_TypeCheck(obj, ObjectType))
+    else if(PyObject_TypeCheck(obj, &ObjectType))
     {
         return ((Object*) obj)->val;
     }

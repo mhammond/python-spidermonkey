@@ -14,7 +14,7 @@ Iterator_new(PyTypeObject* type, PyObject* args, PyObject* kwargs)
     Context* cx = NULL;
     Iterator* self = NULL;
 
-    if(!PyArg_ParseTuple(args, "O!", ContextType, &cx)) goto done;
+    if(!PyArg_ParseTuple(args, "O!", &ContextType, &cx)) goto done;
 
     self = (Iterator*) type->tp_alloc(type, 0);
     if(self == NULL)
@@ -92,7 +92,7 @@ static PyMethodDef Iterator_methods[] = {
     {NULL}
 };
 
-PyTypeObject _IteratorType = {
+PyTypeObject IteratorType = {
     PyObject_HEAD_INIT(NULL)
     0,                                          /*ob_size*/
     "spidermonkey.Iterator",                    /*tp_name*/
@@ -147,7 +147,7 @@ Iterator_Wrap(Context* cx, JSObject* obj)
     tpl = Py_BuildValue("(O)", cx);
     if(tpl == NULL) goto error;
     
-    self = (Iterator*) PyObject_CallObject((PyObject*) IteratorType, tpl);
+    self = (Iterator*) PyObject_CallObject((PyObject*) &IteratorType, tpl);
     if(self == NULL) goto error;
     
     // Attach a JS property iterator.

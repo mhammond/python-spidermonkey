@@ -132,8 +132,13 @@ resolve(JSContext* jscx, JSObject* jsobj, jsval key)
     if(!JS_ValueToId(jscx, key, &pid))
         return js_error(jscx, "Failed to convert property id.");
 
+#if JS_VERSION < 180
     if(!js_DefineProperty(jscx, pycx->jsglobal, pid, JSVAL_VOID, NULL, NULL,
                             JSPROP_SHARED, NULL))
+#else
+    if(!JS_DefinePropertyById(jscx, pycx->jsglobal, pid, JSVAL_VOID, NULL, NULL,
+                            JSPROP_SHARED))
+#endif
         return js_error(jscx, "Failed to define property.");
 
     return JS_TRUE;

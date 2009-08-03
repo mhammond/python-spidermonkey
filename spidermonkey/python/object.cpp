@@ -15,7 +15,7 @@ Object_new(PyTypeObject* type, PyObject* args, PyObject* kwargs)
     Object* self = NULL;
     Context* cx = NULL;
 
-    if(!PyArg_ParseTuple(args, "O!", ContextType, &cx)) goto done;
+    if(!PyArg_ParseTuple(args, "O!", &ContextType, &cx)) goto done;
 
     self = (Object*) type->tp_alloc(type, 0);
     if(self == NULL)
@@ -125,7 +125,7 @@ Object_getitem(Object* self, PyObject* key)
         goto done;
     }
     
-    if(!js_GetProperty(self->cx->cx, self->obj, pid, &pval))
+    if(!JS_GetPropertyById(self->cx->cx, self->obj, pid, &pval))
     {
         PyErr_SetString(PyExc_AttributeError, "Failed to get property.");
         goto done;
@@ -162,7 +162,7 @@ Object_setitem(Object* self, PyObject* key, PyObject* val)
         vval = py2js(self->cx, val);
         if(vval == JSVAL_VOID) goto done;
 
-        if(!js_SetProperty(self->cx->cx, self->obj, pid, &vval))
+        if(!JS_SetPropertyById(self->cx->cx, self->obj, pid, &vval))
         {
             PyErr_SetString(PyExc_AttributeError, "Failed to set property.");
             goto done;
@@ -170,7 +170,7 @@ Object_setitem(Object* self, PyObject* key, PyObject* val)
     }
     else
     {
-        if(!js_DeleteProperty(self->cx->cx, self->obj, pid, &vval))
+        if(!JS_DeletePropertyById2(self->cx->cx, self->obj, pid, &vval))
         {
             PyErr_SetString(PyExc_AttributeError, "Failed to delete property.");
             goto done;
@@ -240,7 +240,7 @@ Object_rich_cmp(Object* self, PyObject* other, int op)
             goto error;
         }
 
-        if(!js_GetProperty(self->cx->cx, self->obj, pid, &pval))
+        if(!JS_GetPropertyById(self->cx->cx, self->obj, pid, &pval))
         {
             PyErr_SetString(PyExc_RuntimeError, "Failed to get property.");
             goto error;
@@ -314,7 +314,7 @@ PyMappingMethods Object_mapping = {
     (objobjargproc)Object_setitem               /*mp_ass_subscript*/
 };
 
-PyTypeObject _ObjectType = {
+PyTypeObject ObjectType = {
     PyObject_HEAD_INIT(NULL)
     0,                                          /*ob_size*/
     "spidermonkey.Object",                      /*tp_name*/
@@ -374,7 +374,7 @@ make_object(PyTypeObject* type, Context* cx, jsval val)
 
     // Unwrapping if its wrapped.
     obj = JSVAL_TO_OBJECT(val);
-    klass = JS_GetClass(cx->cx, obj);
+    klass = JS_GET_CLASS(cx->cx, obj);
     if(klass != NULL && (klass->flags & flags) == flags)
     {
         if(JS_GetReservedSlot(cx->cx, obj, 0, &priv))

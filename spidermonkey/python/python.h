@@ -12,22 +12,18 @@
 #include <Python.h>
 #include <jsapi.h>
 
-extern PyTypeObject _ArrayType;
-extern PyTypeObject _ContextType;
-extern PyTypeObject _FunctionType;
-extern PyTypeObject _HashCObjType;
-extern PyTypeObject _IteratorType;
-extern PyTypeObject _ObjectType;
-extern PyTypeObject _RuntimeType;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-extern PyTypeObject* RuntimeType;
-extern PyTypeObject* ContextType;
-extern PyTypeObject* ClassType;
-extern PyTypeObject* ObjectType;
-extern PyTypeObject* ArrayType;
-extern PyTypeObject* FunctionType;
-extern PyTypeObject* IteratorType;
-extern PyTypeObject* HashCObjType;
+extern PyTypeObject RuntimeType;
+extern PyTypeObject ContextType;
+extern PyTypeObject ClassType;
+extern PyTypeObject ObjectType;
+extern PyTypeObject ArrayType;
+extern PyTypeObject FunctionType;
+extern PyTypeObject IteratorType;
+extern PyTypeObject HashCObjType;
 
 typedef struct {
     PyObject_HEAD
@@ -88,5 +84,8 @@ PyObject* Iterator_Wrap(Context* cx, JSObject* obj);
 // Objects
 PyObject* make_object(PyTypeObject* type, Context* cx, jsval val);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
 

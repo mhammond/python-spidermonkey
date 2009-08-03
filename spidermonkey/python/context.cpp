@@ -13,7 +13,14 @@
 #include <jsobj.h>
 #include <jscntxt.h>
 
-PyObject*
+#if JS_VERSION < 180
+#   define JS_SetPropertyById js_SetProperty
+#   define JS_DeletePropertyById2 js_DeleteProperty
+#   define JS_GetPropertyById js_GetProperty
+#endif
+
+
+static PyObject*
 Context_new(PyTypeObject* type, PyObject* args, PyObject* kwargs)
 {
     Context* self = NULL;
@@ -27,7 +34,7 @@ Context_new(PyTypeObject* type, PyObject* args, PyObject* kwargs)
         args, kwargs,
         "O!|OO",
         keywords,
-        RuntimeType, &runtime,
+        &RuntimeType, &runtime,
         &pyglobal,
         &access
     )) goto error;
@@ -80,7 +87,7 @@ Context_new(PyTypeObject* type, PyObject* args, PyObject* kwargs)
     JS_SetContextPrivate(self->cx, self);
 
     // Setup the root of the property lookup doodad.
-    self->jsglobal = JS_NewObject(self->cx, &js_global_class, NULL, NULL);
+    self->jsglobal = JS_NewObject(self->cx, NULL, NULL, NULL);
     if(self->jsglobal == NULL)
     {
         PyErr_SetString(PyExc_RuntimeError, "Error creating root object.");
@@ -102,7 +109,8 @@ Context_new(PyTypeObject* type, PyObject* args, PyObject* kwargs)
     if(access != NULL) Py_INCREF(access);
     self->access = access;
 
-    JS_SetErrorReporter(self->cx, report_error_cb);
+    // report_error_cb is private!
+    //JS_SetErrorReporter(self->cx, report_error_cb);
     
     Py_INCREF(runtime);
     self->rt = runtime;
@@ -165,7 +173,7 @@ Context_add_global(Context* self, PyObject* args, PyObject* kwargs)
     jsv = py2js(self, pyval);
     if(jsv == JSVAL_VOID) goto error;
 
-    if(!js_SetProperty(self->cx, self->jsglobal, kid, &jsv))
+    if(!JS_SetPropertyById  (self->cx, self->jsglobal, kid, &jsv))
     {
         PyErr_SetString(PyExc_AttributeError, "Failed to set global property.");
         goto error;
@@ -200,7 +208,7 @@ Context_rem_global(Context* self, PyObject* args, PyObject* kwargs)
         PyErr_SetString(JSError, "Failed to create key id.");
     }
 
-    if(!js_GetProperty(self->cx, self->jsglobal, kid, &jsv))
+    if(!JS_GetPropertyById(self->cx, self->jsglobal, kid, &jsv))
     {
         PyErr_SetString(JSError, "Failed to get global property.");
         goto error;
@@ -209,7 +217,7 @@ Context_rem_global(Context* self, PyObject* args, PyObject* kwargs)
     ret = js2py(self, jsv);
     if(ret == NULL) goto error;
     
-    if(!js_DeleteProperty(self->cx, self->jsglobal, kid, &jsv))
+    if(!JS_DeletePropertyById2(self->cx, self->jsglobal, kid, &jsv))
     {
         PyErr_SetString(JSError, "Failed to remove global property.");
         goto error;
@@ -354,7 +362,7 @@ static PyMethodDef Context_methods[] = {
     {NULL}
 };
 
-PyTypeObject _ContextType = {
+PyTypeObject ContextType = {
     PyObject_HEAD_INIT(NULL)
     0,                                          /*ob_size*/
     "spidermonkey.Context",                     /*tp_name*/

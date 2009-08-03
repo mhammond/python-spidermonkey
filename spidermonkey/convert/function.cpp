@@ -10,7 +10,7 @@ js2py_function(Context* cx, jsval val, jsval parent)
         return NULL;
     }
     
-    PyXDR<Function> ret = (Function*) make_object(FunctionType, cx, val);
+    PyXDR<Function> ret = (Function*) make_object(&FunctionType, cx, val);
     if(!ret) return NULL;
 
     ret->parent = parent;
