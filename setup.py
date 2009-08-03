@@ -41,6 +41,7 @@ from setuptools import setup, Extension
 
 DEBUG = "--debug" in sys.argv
 USE_SYSTEM_LIB = "--system-library" in sys.argv
+WIN_SPIDERMONKEY_DLL = None
 
 def find_sources(extensions=(".c", ".cpp")):
     if USE_SYSTEM_LIB:
@@ -123,8 +124,6 @@ def win32_config():
         "extra_compile_args": [
             "-DHAVE_CONFIG_H",
             "-DXP_WIN",
-            "-D_WIN32",
-            "-D_M_IX86",
         ],
         "include_dirs": [
             os.path.join(sm_dir, "dist", "include"),
@@ -137,6 +136,9 @@ def win32_config():
         "extra_link_args": [vars['LIBRARY_NAME'] + ".lib"] \
                            + extra_libs,
     }
+    global WIN_SPIDERMONKEY_DLL
+    sm_dll = vars['LIBRARY_NAME'] + ".dll"
+    WIN_SPIDERMONKEY_DLL = os.path.join(sm_dir, 'dist', 'bin', sm_dll)
     return config
 
 def platform_config():
@@ -198,6 +200,7 @@ Distribution.global_options.append(("debug", None,
 Distribution.global_options.append(("system-library", None,
                     "Link against an installed system library."))
 
+config = platform_config()
 setup(
     name = "python-spidermonkey",
     version = "0.0.9",
@@ -209,7 +212,8 @@ setup(
     url = "http://github.com/davisp/python-spidermonkey",
     download_url = "http://github.com/davisp/python-spidermonkey.git",
     zip_safe = False,
-    
+
+    data_files = [('',[WIN_SPIDERMONKEY_DLL])],
     classifiers = [
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
@@ -234,7 +238,7 @@ setup(
         Extension(
             "spidermonkey",
             sources=find_sources(),
-            **platform_config()
+            **config
         )
     ],
 
