@@ -11,7 +11,12 @@ JavaScript implementation.  Allows implementation of JavaScript classes,
 objects and functions in Python, and evaluation and calling of JavaScript
 scripts and functions respectively.  Borrows heavily from Claes Jacobssen's
 Javascript Perl module, in turn based on Mozilla's 'PerlConnect' Perl binding.
-""",
+"""
+
+#To build on Windows:
+#* Set SPIDERMONKEY_DIR to the root of a js 'build dir' - this will
+#  generally have a subdir named 'dist'.
+#* Build with 'setup.py --system-library install'
 
 # I haven't the sligthest, but this appears to fix
 # all those EINTR errors. Pulled and adapted for OS X
@@ -21,13 +26,14 @@ Javascript Perl module, in turn based on Mozilla's 'PerlConnect' Perl binding.
 #
 import ctypes
 import signal
-libc = ctypes.CDLL("libc.dylib")
-libc.siginterrupt(signal.SIGCHLD, 0)
+#libc = ctypes.CDLL("libc.dylib")
+#libc.siginterrupt(signal.SIGCHLD, 0)
 
 import glob
 import os
 import subprocess as sp
 import sys
+import re
 from distutils.dist import Distribution
 import ez_setup
 ez_setup.use_setuptools()
@@ -41,7 +47,9 @@ def find_sources(extensions=(".c", ".cpp")):
         return [
             fname
             for ext in extensions
-            for fname in glob.glob("spidermonkey/*" + ext)
+                # *sob* - every subdir except libjs
+            for dname in ["*", "python/*", "convert/*", "utils/*", "javascript/*"]
+            for fname in glob.glob("spidermonkey/" + dname + ext)
         ]
     else:
         return [
@@ -93,7 +101,49 @@ def js_config(config=None):
             "compiled without -DJS_THREADSAFE");
     return config
 
+def win32_config():
+    try:
+        sm_dir = os.environ['SPIDERMONKEY_DIR']
+    except KeyError:
+        raise SystemError("Please point SPIDERMONKEY_DIR to the root of "
+                                 " a javascript 'build' directory")
+    # expected to be the top of the 'build' directory for 1.8+
+    if not os.path.isfile(os.path.join(sm_dir, "js-config")):
+        raise SystemError("Can't find js-config file in %r", sm_dir)
+    # load everything that looks like a variable.
+    vars = {}
+    for line in open(os.path.join(sm_dir, "js-config")):
+        m = re.match("(.*)='(.*)'", line)
+        if m:
+            vars[m.group(1)] = m.group(2)
+    assert vars, "failed to load anything from js-config!"
+    extra_libs = vars['JS_CONFIG_LIBS'].split()
+
+    config = {
+        "extra_compile_args": [
+            "-DHAVE_CONFIG_H",
+            "-DXP_WIN",
+            "-D_WIN32",
+            "-D_M_IX86",
+        ],
+        "include_dirs": [
+            os.path.join(sm_dir, "dist", "include"),
+            "spidermonkey",
+        ],
+        "library_dirs": [
+            os.path.join(sm_dir, "dist", "lib"),
+        ],
+        "libraries": [],
+        "extra_link_args": [vars['LIBRARY_NAME'] + ".lib"] \
+                           + extra_libs,
+    }
+    return config
+
 def platform_config():
+    # check windows early - it doesn't even have os.uname!
+    if sys.platform == "win32":
+        return win32_config()
+
     sysname = os.uname()[0]
     machine = os.uname()[-1]
 
@@ -101,7 +151,7 @@ def platform_config():
     # us all the information we need.
     if USE_SYSTEM_LIB:
         return js_config()
-    
+
     # Build our configuration
     config = {
         "extra_compile_args": [
